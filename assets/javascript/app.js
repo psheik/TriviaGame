@@ -135,7 +135,7 @@ $(document).ready(function() {
         }
         //display next question and answer choices
         questLayout();
-        questInterval = setInterval(countDown, 500); 
+        questInterval = setInterval(countDown, 1000); 
     }
     
     //function displays the appropriate answer message for 4 seconds
