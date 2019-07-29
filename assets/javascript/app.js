@@ -1,227 +1,148 @@
-$(document).ready(function() {
-    
-    //set global variables
-    var questInterval;
-    var numCorrect = 0;
-    var numWrong = 0;
-    var numNoAns = 0;
-    var questTracker = 0; 
-    var wasStartClicked = false;  
-    var eachQuest = "";    
-    var currAns = "";
-    //variables keep track of current question
-    var flagsArray = [];
-    var optionsArray = [];
-    //variables to display time remaining
-    var timer = 30;
-    var userPick = "";
-    
-    //game data bank
-    var questBank = [
-                {"Where was Google founded?": {"Menlo Park":1, "Palo Alto":0, "Sunnyvale":0, "Mountain View":0}}
-            , {"What year was Tesla Founded?": {"2001":1, "2002":0, "2003":1, "2004":0}}
-            , {"Who founded Nintendo?": {"Masujiro Hashimoto":0, "Rokuro Aoyama":0, "Fusajiro Yamauchi":1, "Yoshisuke Aikawa":0}}
-            , {"Where did Steve Jobs attend high school?": {"Fremont High School":0, "Lynbrook High School":0, "Cupertino High School":0, "Homestead High School":1}}
-            , {"When was the iPhone invented?": {"2005":0, "2006":0, "2007":1, "2008":0}}
-            , {"What kind of technology does Akai produce?": {"Cellular Technology":0, "Music Technology":1, "Automotive Technology":0, "Medical Technology":0}}
-            , {"Which company sold the most televisions in 2018?": {"Samsung":1, "Sony":0, "Vizio":0, "LG":0}}
-    ];
+var triviaQuestions = [{
+	question: "Where was Google founded?",
+	answerList: ["Sunnyvale", "Menlo Park", "Palo Alto", "Mountain View"],
+	answer: 1
+},{
+	question: "When was Tesla Founded?",
+	answerList: ["2003", "2004", "2005", "2006"],
+	answer: 0
+},{
+	question: "Who founded Nintendo?",
+	answerList: ["Fusajiro Yamauchi", "Masujiro Hashimoto", "Rokuro Aoyama", "Yoshisuke Aikawa"],
+	answer: 0
+},{
+	question: "Where did Steve Jobs attend high school?",
+	answerList: ["Fremont High School", "Lynbrook High School", "Homestead High School", "Cupertino High School"],
+	answer: 2
+},{
+	question: "When was the iPhone invented?",
+	answerList: ["2004", "2005", "2006", "2007"],
+	answer: 3
+},{
+	question: "What kind of technology does Akai produce?",
+	answerList: ["Music Technology", "Automotive Technology", "Cellular", "Medical Technology"],
+	answer: 0
+},{
+	question: "Which company sold the most televisions in 2018?",
+	answerList: ["Sony", "Samsung", "LG", "Vizio"],
+	answer: 1
+}];
 
-    var questGif = ['<iframe src="https://giphy.com/embed/yPyyu2nqaYbiU" width="480" height="350" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>',
-    '<iframe src="https://giphy.com/embed/WM7JfExEKvTsQ" width="480" height="264" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>', 
-    '<iframe src="https://giphy.com/embed/euAnOkLGWtdHG" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>',
-    '<iframe src="https://giphy.com/embed/p6z2lHvl4Da4U" width="480" height="313" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>',
-    '<iframe src="https://giphy.com/embed/26n79t82lmj989iAE" width="480" height="350" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>',
-    '<iframe src="https://giphy.com/embed/UUgxQ0Fhh63aXFWjsT" width="360" height="350" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>',
-    '<iframe src="https://giphy.com/embed/AMnVrhl9INK1O" width="480" height="350" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>'
-    ];
-    
-    //resets game
-    function resetGame(){
-        numCorrect = 0;
-        numWrong = 0;
-        questTracker = 0;
-        wasStartClicked = false;
-        eachQuest = "";
-        currAns = "";
-        userOptPick = "";
-        optionArray = [];
-        flagsArray = [];
-        timer = 30;
-    }
-    
-    //update current question
-    function getCurrQuest() {
-        var questArray = Object.keys(questBank[questTracker]); 
-        eachQuest = questArray[0];
-        console.log(eachQuest);
-    }
-    
-    //update options for current question
-    function getCurrOptions() {
-        var optionsAndFlagArray = Object.values(questBank[questTracker]);
-        var optionsAndFlagObj = optionsAndFlagArray[0];
-        optionsArray = Object.keys(optionsAndFlagObj);
-        flagsArray = Object.values(optionsAndFlagObj);
-        //get current answer for question
-        console.log(flagsArray);
-        console.log(optionsArray);
-    }
-    
-    //store answer for the current question
-    function getCurrAns() {
-        for (var i = 0; i < flagsArray.length; i++) {
-            if (flagsArray[i] === 1) {
-                currAns = optionsArray[i];
-            }
-        }
-    }
+var gifArray = ['question1', 'question2', 'question3', 'question4', 'question5', 'question6', 'question7'];
+var currentQuestion; var correctAnswer; var incorrectAnswer; var unanswered; var seconds; var time; var answered; var userSelect;
+var messages = {
+	correct: "Correct!",
+	incorrect: "Nope!",
+	endTime: "Out of time!",
+	finished: "Let's see how well you did!"
+}
 
-    //create questions and answer choices
-    function questLayout() {
-        getCurrQuest();
-        getCurrOptions();
-        userPick = "";
-        //clear contents of div holding questions and answer choices
-        $("#quest-container").empty();
-        //page layout for questions and answer choices
-        var timeDisp = $("<p id='timer'></p>").text("Time Remaining: " + timer + " Seconds");
-        var questDisp = $("<p id= 'each-quest'></p>").text(eachQuest);
-        console.log(timeDisp.text());
-        console.log(questDisp.text());
-        var optDivs = $("<div class='options-view'></div>");
-        //buttons for answer choices
-        for (var i = 0; i < optionsArray.length; i++) { 
-            var buttn = $("<button>");
-            buttn.addClass("btn-options");
-            buttn.text(optionsArray[i]);
-            optDivs.append(buttn);
-        }
-        //timer, questions, and answer choices added to question container
-        $("#quest-container").append(timeDisp, "<br/>", questDisp, optDivs);
-    }
-    
-    //tracks the amount ot time alloted to each question.
-    function countDown() {
-        if (timer > 0) {
-            timer--;
-            $("#timer").text("Time Remaining: " + timer + " Seconds");
-        }
-    //fixes display if no user answer
-        else if (timer === 0 && userPick === ""){
-            noUserAnswer();
-        } 
-    }
-    
-    function noUserAnswer() {
-        clearInterval(questInterval);
-        dispAnswerMessg("");
-        questTracker++;
-        //Go to next question after 4 seconds
-        if (questTracker < questBank.length) {
-            setTimeout(dispQuest, 4000);
-        }
-        else {
-            setTimeout(resultDisp, 4000);
-        }
-    }
+$('#startBtn').on('click', function(){
+	$(this).hide();
+	newGame();
+});
 
-    //30 seconds allowed per question
-    function dispQuest() {
-        timer = 30;
-        //remove start button before showing questions
-        if (wasStartClicked) {
-            $("#start-btn").remove();
-        }
-        //display next question and answer choices
-        questLayout();
-        questInterval = setInterval(countDown, 1000); 
-    }
-    
-    //function displays the appropriate answer message for 4 seconds
-    function dispAnswerMessg(uOpt) {
-        //get current answer
-        getCurrAns();
-        //remove elements containing answer choicesand questions
-        $("#each-quest").remove();
-        $(".btn-options").remove();
-        if (uOpt === "") {
-            //message if user runs out of time on question
-            var ansStatus = $("<p id='timedOut-status'></p>").text("Out of Time!");
-            var ansMessg = $("<p id='correct-ans'></p>").text("The correct answer was: " + currAns);
-            var ansGif = $(questGif[questTracker]);
-            $("#quest-container").append(ansStatus, ansMessg, ansGif);
-            //update number of questions not answered
-            numNoAns++;
-        }
-        else if (uOpt === currAns) {
-            //message for right answers
-            var ansStatus = $("<p id='correct-ans'></p>").text("Correct!");
-            var ansGif = $(questGif[questTracker]);
-            $("#quest-container").append(ansStatus, ansGif);
-            //update number of answers right
-            numCorrect++;
-        }
-        else if (uOpt !== currAns) {
-            //message for wrong answers
-            var ansStatus = $("<p id='wrong-status'></p>").text("Nope!");
-            var ansMessg = $("<p id='correct-ans'></p>").text("The correct answer was: " + currAns);
-            var ansGif = $(questGif[questTracker]);
-            $("#quest-container").append(ansStatus, ansMessg, ansGif);
-            //update number of answers wrong
-            numWrong++;
-        }
-        
-    }
-    //shows result at end of the game
-    function resultDisp() {
-    //remove all #quest-container content, except time
-    $("#timedOut-status").remove();
-    $("#correct-ans").remove();
-    $("#wrong-status").remove();
-    $(".giphy-embed").remove();
-    //elements that display results
-    var resMessg = $("<p id='res-messg'></p>").text("All done, heres how you did!");
-    var rightAns = $("<p id='right-ans'></p>").text("Correct Answers: " + numCorrect);
-    var wrongAns = $("<p id='wrong-ans'></p>").text("Incorrect Answers: " + numWrong);
-    var noAns = $("<p id='no-ans'></p>").text("Unanswered: " + numNoAns);
-    var buttn = $("<button>");
-    buttn.addClass("start-buttons");
-    buttn.text("Start Over?");
-    $("#quest-container").append(resMessg, rightAns, wrongAns, noAns, buttn);
-    }
-    
-    //click event to start button
-    $("#game-container").on("click", ".start-buttons", function(){
-        console.log($("#quest-container").text());
-        //reset game 
-        resetGame();
-        if (wasStartClicked === false) {
-            wasStartClicked = true;
-            //display questions and options
-            dispQuest();
-            console.log("star-timer is: " + timer);
-            //click event for answer user picks
-            $("#quest-container").on("click", ".btn-options", function(){
-                clearInterval(questInterval);
-                userPick = $(this).text();
-                console.log(userPick);
-                console.log("btn-timer is: " + timer);
-                dispAnswerMessg(userPick);
-                //update tracker for next question
-                questTracker++;
-                if (questTracker < questBank.length) {
-                    
-                    //display question after 4 seconds
-                    setTimeout(dispQuest, 4000);
-                    console.log("start*****-timer is: " + timer);
-                }
-                else {
-                    //display the results of the game after 4 seconds
-                    setTimeout(resultDisp, 4000);
-                }
-            });
-        } 
-    });
-    });
-    
+$('#startOverBtn').on('click', function(){
+	$(this).hide();
+	newGame();
+});
+
+function newGame(){
+	$('#finalMessage').empty();
+	$('#correctAnswers').empty();
+	$('#incorrectAnswers').empty();
+	$('#unanswered').empty();
+	currentQuestion = 0;
+	correctAnswer = 0;
+	incorrectAnswer = 0;
+	unanswered = 0;
+	newQuestion();
+}
+
+function newQuestion(){
+	$('#message').empty();
+	$('#correctedAnswer').empty();
+	$('#gif').empty();
+	answered = true;
+	
+	//Creates new questions and answers
+	$('.question').html('<h2>' + triviaQuestions[currentQuestion].question + '</h2>');
+	for(var i = 0; i < 4; i++){
+		var choices = $('<div>');
+		choices.text(triviaQuestions[currentQuestion].answerList[i]);
+		choices.attr({'data-index': i });
+		choices.addClass('thisChoice');
+		$('.answerList').append(choices);
+	}
+	countdown();
+	//clicker function to pause time and show new answer choices
+	$('.thisChoice').on('click',function(){
+		userSelect = $(this).data('index');
+		clearInterval(time);
+		answerPage();
+	});
+}
+
+//creates timer
+function countdown(){
+	seconds = 30;
+	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + '</h3>');
+	answered = true;
+	time = setInterval(showCountdown, 1000);
+}
+
+function showCountdown(){
+	seconds--;
+	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + '</h3>');
+	if(seconds < 1){
+		clearInterval(time);
+		answered = false;
+		answerPage();
+	}
+}
+
+function answerPage(){
+	$('#currentQuestion').empty();
+	$('.thisChoice').empty(); 
+	$('.question').empty();
+
+	var rightAnswerText = triviaQuestions[currentQuestion].answerList[triviaQuestions[currentQuestion].answer];
+	var rightAnswerIndex = triviaQuestions[currentQuestion].answer;
+	$('#gif').html('<img src = "assets/images/'+ gifArray[currentQuestion] +'.gif">');
+	//checks response for accuracy or timeout
+	if((userSelect == rightAnswerIndex) && (answered == true)){
+		correctAnswer++;
+		$('#message').html(messages.correct);
+	} else if((userSelect != rightAnswerIndex) && (answered == true)){
+		incorrectAnswer++;
+		$('#message').html(messages.incorrect);
+		$('#correctedAnswer').html('The correct answer was: ' + rightAnswerText);
+	} else{
+		unanswered++;
+		$('#message').html(messages.endTime);
+		$('#correctedAnswer').html('The correct answer was: ' + rightAnswerText);
+		answered = true;
+	}
+	
+	if(currentQuestion == (triviaQuestions.length-1)){
+		setTimeout(scoreboard, 4000)
+	} else{
+		currentQuestion++;
+		setTimeout(newQuestion, 4000);
+	}	
+}
+
+//removes data to avoid repeats
+function scoreboard(){
+	$('#timeLeft').empty();
+	$('#message').empty();
+	$('#correctedAnswer').empty();
+	$('#gif').empty();
+	$('#finalMessage').html(messages.finished);
+	$('#correctAnswers').html("Correct Answers: " + correctAnswer);
+	$('#incorrectAnswers').html("Incorrect Answers: " + incorrectAnswer);
+	$('#unanswered').html("Unanswered: " + unanswered);
+	$('#startOverBtn').addClass('reset');
+	$('#startOverBtn').show();
+	$('#startOverBtn').html('Start Over?');
+}
