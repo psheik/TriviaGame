@@ -86,14 +86,14 @@ function newQuestion(){
 //creates timer
 function countdown(){
 	seconds = 30;
-	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + '</h3>');
+	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + ' seconds');
 	answered = true;
 	time = setInterval(showCountdown, 1000);
 }
 
 function showCountdown(){
 	seconds--;
-	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + '</h3>');
+	$('#timeLeft').html('<h3>Time Remaining: ' + seconds + ' seconds');
 	if(seconds < 1){
 		clearInterval(time);
 		answered = false;
